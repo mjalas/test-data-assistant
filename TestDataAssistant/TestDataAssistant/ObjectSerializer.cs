@@ -33,10 +33,7 @@ namespace TestDataAssistant
         public static string ToJSON(TO obj)
         {
             string output = "";
-            var path = Directory.GetCurrentDirectory();
-            if (path.Contains("Debug")) path = path.Replace("\\Debug", "");
-            if (path.Contains("\\bin")) path = path.Replace("\\bin", "");
-            path += "\\data\\tmp.json";
+            var path = GetTemporayJSONFilePath();
             var ser = new DataContractJsonSerializer(typeof(TO), new DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true });
             using (var stream = new FileStream(path, FileMode.Create))
             {
@@ -62,6 +59,15 @@ namespace TestDataAssistant
             if (File.Exists(path)) File.Delete(path);
 
             return output;
+        }
+
+        private static string GetTemporayJSONFilePath()
+        {
+            var path = Directory.GetCurrentDirectory();
+            if (path.Contains("Debug")) path = path.Replace("\\Debug", "");
+            if (path.Contains("\\bin")) path = path.Replace("\\bin", "");
+            path += "\\data\\tmp.json";
+            return path;
         }
     }
 }
