@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -10,25 +11,25 @@ namespace TestDataAssistant
     /// </summary>
     public partial class MainWindow : Window
     {
-        private string Server => GetBoxContent("ServerBox");
+        private string Server => GetTextBoxContent("ServerBox");
 
-        private string Database => GetBoxContent("DatabaseBox");
+        private string Database => GetTextBoxContent("DatabaseBox");
 
-        private string User => GetBoxContent("UserBox");
+        private string User => GetTextBoxContent("UserBox");
 
-        private string Password => GetBoxContent("PasswordBox");
+        private string Password => GetTextBoxContent("PasswordBox");
 
-        private string ConnectionString => GetBoxContent("ConnectionStringBox");
+        private string ConnectionString => GetTextBoxContent("ConnectionStringBox");
 
-        private string TableName => GetBoxContent("TableNameBox");
+        private string TableName => GetTextBoxContent("TableNameBox");
 
         private Label ErrorLbl => (Label)this.FindName("ErrorLabel");
 
-        private string Query => GetBoxContent("QueryInput");
+        private string Query => GetTextBoxContent("QueryInput");
 
         private TextBox Output => (TextBox)this.FindName("OutputBox");
 
-        private string GetBoxContent(string boxName)
+        private string GetTextBoxContent(string boxName)
         {
             var box = (TextBox)this.FindName(boxName);
             if (box == null) return null;
@@ -49,11 +50,31 @@ namespace TestDataAssistant
         
         private void ExecuteButton_OnClick(object sender, RoutedEventArgs e)
         {
-            
+            try
+            {
+                var connectionString = GetConnectionString();
+                var reader = new DataReader();
+                var queries = GetQueries(Query);
+                var database = new SerializableDatabase();
+                foreach (var query in queries)
+                {
+                    var table = reader.FetchData(connectionString, query);
+                    var queryParts = query.Split(' ').ToList();
+                    var index = queryParts.IndexOf("FROM");
+                    var tableName = queryParts.ElementAt(index + 1);
+                    database.AddTable(tableName, table);
+                }
+
+                Output.Text = ObjectSerializer<SerializableDatabase>.ToJSON(database);
+            }
+            catch (ArgumentNullException exception)
+            {
+                ErrorLbl.Content = exception.Message;
+            }
         }
 
 
-        private List<string> GetQueries(string queryInput)
+        private List<string> GetQueries(string queryInput) // TODO: Remove expectation that a query is only on one row! - MJ 11.06.2016
         {
             if (string.IsNullOrEmpty(queryInput))
             {
