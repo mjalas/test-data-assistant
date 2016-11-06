@@ -1,17 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace TestDataAssistant
 {
@@ -32,14 +22,11 @@ namespace TestDataAssistant
 
         private string TableName => GetBoxContent("TableNameBox");
 
-        private Label ErrorLbl
-        {
-            get { return (Label)this.FindName("ErrorLabel"); }
-        }
+        private Label ErrorLbl => (Label)this.FindName("ErrorLabel");
 
-        private string Query { get { return GetBoxContent("QueryInput"); } }
+        private string Query => GetBoxContent("QueryInput");
 
-        private TextBox Output { get { return (TextBox)this.FindName("OutputBox"); } }
+        private TextBox Output => (TextBox)this.FindName("OutputBox");
 
         private string GetBoxContent(string boxName)
         {
@@ -92,7 +79,7 @@ namespace TestDataAssistant
             if (string.IsNullOrEmpty(connectionString))
             {
                 if (IsNull(Server) || IsNull(Database) || IsNull(User) || IsNull(Password)) throw new ArgumentNullException("Please enter content to all connection fields or to connection string field!");
-                connectionString = string.Format("server={0};database={1};uid={2};password={3}", Server, Database, User, Password);
+                connectionString = $"server={Server};database={Database};uid={User};password={Password}";
             }
             return connectionString;
         }
@@ -104,7 +91,34 @@ namespace TestDataAssistant
 
         private void ReadSchemaButton_OnClick(object sender, RoutedEventArgs e)
         {
-            
+            string connectionString;
+            try
+            {
+                connectionString = GetConnectionString();
+            }
+            catch (ArgumentNullException exception)
+            {
+                ErrorLbl.Content = exception.Message;
+                return;
+            }
+
+
+            var reader = new SchemaReader();
+            if (string.IsNullOrEmpty(TableName))
+            {
+                ErrorLbl.Content = "No table was specified!";
+                return;
+            }
+            try
+            {
+                var result = reader.GetColumnNames(connectionString, TableName);
+                Output.Text = ContentFormatter.ListAsColumns(result);
+            }
+            catch (Exception exception)
+            {
+                ErrorLbl.Content = exception.Message;
+            }
+
         }
     }
 }
