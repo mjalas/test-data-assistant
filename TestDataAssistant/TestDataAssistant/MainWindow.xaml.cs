@@ -141,6 +141,11 @@ namespace TestDataAssistant
             }
 
         }
+
+        private void Quit_MenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
     }
 }
 
